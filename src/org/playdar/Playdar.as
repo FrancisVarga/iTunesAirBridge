@@ -34,7 +34,7 @@ package org.playdar{
 				if(state=="playing"){
 					percentPlayed = channel.position / sound.length;
 					if(percentPlayed > .98){
-						this.dispatchEvent(new Event("complete"));
+						dispatchEvent(new Event("complete"));
 					}
 				}
 			});
