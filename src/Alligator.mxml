@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:WindowedApplication xmlns:mx="http://www.adobe.com/2006/mxml" layout="absolute" creationComplete="onCreationComplete();">
+    <mx:Script>
+    	<![CDATA[
+    		import mx.core.Application;
+    		import mx.collections.ArrayCollection;
+    		import org.playdar.ExternalTrack;
+    		import com.imlucas.itunesbridge.*;
+    		import org.playdar.Playdar;
+    		
+    		import flash.desktop.NativeProcess;
+    		import flash.desktop.NativeProcessStartupInfo;
+    		import flash.events.NativeProcessExitEvent;
+    		
+    		private var mdfindFile:File;
+			private var nativeProcess:NativeProcess;
+			private var processBuffer:ByteArray;
+			
+			private var playdar:Playdar = new Playdar();
+			
+			[Bindable] public var library:ArrayCollection = new ArrayCollection();
+			[Bindable] public var playlists:ArrayCollection = new ArrayCollection();
+			
+			import mx.utils.ObjectUtil;
+			
+			import mx.rpc.xml.SimpleXMLDecoder;
+    		/**
+    		 * Adds a list of tracks to the collection.
+    		 * Should be called from the bookmarklet using LocalConnection.
+    		 */
+    		public function importTracksToLibrary(t:Array):void{
+    			for(var i:int =0; i<t.length; i++){
+    				var track:ExternalTrack = t[i] as ExternalTrack;
+    			}
+    		}
+    		[Bindable] public var nowPlaying:Object;
+    		private function playIt(artist:String, track:String):void{
+    			trace('Play it called');
+    			playdar.resolve(
+                    artist, 
+                    track, 
+                    function(r:Object):void{
+                        nowPlaying = r.results[0];
+                        playdar.play(r.results[0].sid);
+                    }, 
+                    function(e:Error):void{}
+                );
+    		}
+    		
+    		private function onCreationComplete():void{
+    			var scriptFile:File = File.applicationDirectory;
+    			if(iTunesBridge.isWin()){
+    				scriptFile = scriptFile.resolvePath("Scripts/windows.js");
+    				iTunesBridge.CSCRIPT_FILE_PATH = scriptFile.nativePath;
+    			}
+    			playdar.addEventListener("complete", function(e:Event):void{
+    				nextTrack();
+    			});
+                loadItunesPlaylists();
+                
+                playdar.status(function(stat:Object):void{}, function(e:Error):void{trace('Error: '+ObjectUtil.toString(e));})
+    		}
+    		private function nextTrack():void{
+                var a:Object = ArrayCollection(dg.dataProvider).getItemAt(dg.selectedIndex+1);
+                playIt(a.artist, a.title);
+                dg.selectedIndex = dg.selectedIndex+1;
+    		}
+    		private function prevTrack():void{
+                var a:Object = ArrayCollection(dg.dataProvider).getItemAt(dg.selectedIndex-1);
+                playIt(a.artist, a.title);
+                dg.selectedIndex = dg.selectedIndex-1;
+    		}
+    		private function loadItunesLibrary():void{
+    			var app:Alligator = this;
+    			app.status = "Talking to iTunes...";
+    			new iTunesBridge().getLibrary(function(r):void{
+                    library = r.library.track;
+                    app.status = "Library loaded!";
+                });
+    		}
+    		
+    		private function loadItunesPlaylists():void{
+    			var app:Alligator = this;
+    			
+                new iTunesBridge().getPlaylists(function(r):void{
+                    playlists = r.playlists.playlist;
+                    tree.selectedIndex = 0;
+                    dg.dataProvider=tree.dataProvider.getItemAt(tree.selectedIndex).items.track;
+                });
+            }
+    	]]>
+    </mx:Script>
+	<mx:VBox width="100%" height="100%" backgroundColor="#D6DDE5">
+		<mx:Canvas width="100%" backgroundColor="#393939">
+			<mx:HBox width="100%" height="100%" horizontalGap="0" verticalAlign="middle">
+				<mx:Button label="&lt;&lt;" height="40" cornerRadius="0" fillAlphas="[1.0, 1.0]" fillColors="[#3C3C3C, #2F2F2F]" color="#FFFFFF" borderColor="#000000" click="prevTrack();"/>
+				<mx:Button label="&gt;" height="40" cornerRadius="0" width="50"  fillAlphas="[1.0, 1.0]" fillColors="[#3C3C3C, #2F2F2F]" color="#FFFFFF" borderColor="#000000" click="playdar.playOrPause(nowPlaying.sid);"/>
+				<mx:Button label="&gt;&gt;" height="40" cornerRadius="0" paddingRight="10"  fillAlphas="[1.0, 1.0]" fillColors="[#3C3C3C, #2F2F2F]" color="#FFFFFF" borderColor="#000000" click="nextTrack();"/>
+				<mx:HBox paddingRight="10" paddingLeft="10" width="100%">
+					<mx:VBox width="100%" horizontalAlign="center">
+					    <mx:Text text="{nowPlaying.track} - {nowPlaying.artist}" color="#FFFFFF"/>
+						<mx:HSlider width="100%" maximum="100" allowTrackClick="false" value="{playdar.percentPlayed*100}" showTrackHighlight="true"/>
+					</mx:VBox>
+				</mx:HBox>
+				
+				<mx:TextInput cornerRadius="12" borderStyle="solid" paddingRight="10"/>
+			</mx:HBox>
+        </mx:Canvas>
+		<mx:HBox width="100%" height="100%">
+			
+			<mx:VBox width="100%" height="100%">
+			    <!--
+				<mx:Canvas height="100" width="100%">
+	            
+	            </mx:Canvas>
+	            -->
+	            <mx:HBox width="100%" height="100%">
+	            	<mx:VBox width="200" height="100%">
+	            		
+	            	
+	            	<mx:Tree backgroundColor="#D6DDE5" height="100%" width="200" dataProvider="{playlists}" labelField="name" itemClick="dg.dataProvider=tree.dataProvider.getItemAt(tree.selectedIndex).items.track;" id="tree" borderStyle="none">
+		                
+		            </mx:Tree>
+		            
+	                </mx:VBox>
+	        
+					<mx:DataGrid id="dg" dataProvider="{library}" width="100%" height="100%" paddingLeft="10" paddingRight="10" itemClick="playIt(dg.selectedItem.artist, dg.selectedItem.title);">
+						<mx:columns>
+							<mx:DataGridColumn headerText="Artist" dataField="artist"/>
+							<mx:DataGridColumn headerText="Album" dataField="album"/>
+							<mx:DataGridColumn headerText="Track" dataField="title"/>
+							<mx:DataGridColumn headerText="# Plays" dataField="play_count"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</mx:HBox>
+			</mx:VBox>
+		</mx:HBox>
+	</mx:VBox>
+</mx:WindowedApplication>
