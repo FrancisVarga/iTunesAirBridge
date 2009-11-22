@@ -16,3 +16,6 @@ All playack is handled by [Playdar](http://playdar.org).
  
 ## TODO 
  - Applescript to talk iTunes on Mac
+ 
+## Screenshots
+![Hey, theres all my stuff from iTunes](http://github.com/imlucas/iTunesAirBridge/raw/master/src/screenshots/iTunesAirBridge-screen-1.png)
