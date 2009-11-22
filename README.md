@@ -8,6 +8,10 @@ library and all of your playlists and allows you to do simple playback.
 
 All playack is handled by [Playdar](http://playdar.org).
 
+The actual scripting to talk to iTunes is done in VBScript (and soon AppleScript).  
+Choose to go this route as it makes it super simple for anyone to add their own
+call and fiddle with things, as opposed to having to compile their own C code. 
+
 ## Requirements
  - Windows only (for right now)
  - [Adobe Air 2.0 Beta](http://labs.adobe.com/downloads/air2.html)
