@@ -36,12 +36,14 @@
     		[Bindable] public var nowPlaying:Object;
     		private function playIt(artist:String, track:String):void{
     			trace('Play it called');
+    			playdarIndicator.visible = true;
     			playdar.resolve(
                     artist, 
                     track, 
                     function(r:Object):void{
                         nowPlaying = r.results[0];
                         playdar.play(r.results[0].sid);
+                        playdarIndicator.visible = false;
                     }, 
                     function(e:Error):void{}
                 );
@@ -102,8 +104,6 @@
 						<mx:HSlider width="100%" maximum="100" allowTrackClick="false" value="{playdar.percentPlayed*100}" showTrackHighlight="true"/>
 					</mx:VBox>
 				</mx:HBox>
-				
-				<mx:TextInput cornerRadius="12" borderStyle="solid" paddingRight="10"/>
 			</mx:HBox>
         </mx:Canvas>
 		<mx:HBox width="100%" height="100%">
@@ -136,4 +136,5 @@
 			</mx:VBox>
 		</mx:HBox>
 	</mx:VBox>
+	<mx:SWFLoader y="1" source="playdar icon animated.swf" width="40" height="40" right="0" id="playdarIndicator" visible="false"/>
 </mx:WindowedApplication>
