@@ -53,7 +53,7 @@ package com.imlucas.itunesbridge{
 		
 		private function sendCommand(command:String):void{
 			this.binFile = new File();
-			if(isWin()){
+			 if(isWin()){
 				this.binFile.nativePath = CSCRIPT_PATH;
 				this.inputFilePath = CSCRIPT_FILE_PATH;
 			}
